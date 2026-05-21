@@ -1,0 +1,48 @@
+steps:
+  - name: 'gcr.io/cloud-builders/gsutil'
+    entrypoint: 'bash'
+    args:
+      - '-c'
+      - |
+        set -e
+        echo "Pulling model assets from GCS..."
+        mkdir -p models
+        gsutil -m cp -r gs://whissle-voice-recordings/asr-models/model-en-meta/* models/
+        # Optional: KenLM language model
+        gsutil -m cp -r gs://whissle-voice-recordings/asr-models/kenlm models/kenlm || echo "No KenLM — beam search without LM"
+        echo "=== Model assets ready ==="
+        du -sh models/
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'build'
+      - '-t'
+      - 'us-central1-docker.pkg.dev/deepvoice-468015/cloud-run-source-deploy/whissle-asr-inference:latest'
+      - '.'
+
+  - name: 'gcr.io/cloud-builders/docker'
+    args:
+      - 'push'
+      - 'us-central1-docker.pkg.dev/deepvoice-468015/cloud-run-source-deploy/whissle-asr-inference:latest'
+
+  - name: 'gcr.io/google.com/cloudsdktool/cloud-sdk'
+    entrypoint: 'gcloud'
+    args:
+      - 'run'
+      - 'deploy'
+      - 'whissle-asr-inference'
+      - '--project=deepvoice-468015'
+      - '--region=us-central1'
+      - '--image=us-central1-docker.pkg.dev/deepvoice-468015/cloud-run-source-deploy/whissle-asr-inference:latest'
+      - '--memory=4Gi'
+      - '--cpu=2'
+      - '--min-instances=0'
+      - '--max-instances=5'
+      - '--concurrency=10'
+      - '--port=8001'
+
+images:
+  - 'us-central1-docker.pkg.dev/deepvoice-468015/cloud-run-source-deploy/whissle-asr-inference:latest'
+options:
+  machineType: 'E2_HIGHCPU_8'
+  diskSizeGb: 50
