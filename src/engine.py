@@ -327,10 +327,7 @@ class ASREngine:
         import onnxruntime as ort
         import multiprocessing
 
-        onnx_int8 = self.model_dir / 'model_int8.onnx'
-        onnx_path = onnx_int8 if onnx_int8.exists() else self.model_dir / 'model.onnx'
-        if onnx_int8.exists():
-            print(f"Using quantized model: {onnx_int8.name}")
+        onnx_path = self.model_dir / 'model.onnx'
         available_providers = ort.get_available_providers()
         print(f"ONNX Runtime version: {ort.__version__}")
         print(f"Available providers: {available_providers}")
