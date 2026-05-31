@@ -11,3 +11,6 @@ models/
 .env
 .venv/
 venv/
+models/
+models_backup/
+.venv/

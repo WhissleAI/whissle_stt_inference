@@ -74,8 +74,15 @@ class ASREngine:
         with open(config_path, 'r') as f:
             self.config = json.load(f)
 
-        self.preprocessor = MelSpectrogramPreprocessor(self.config['preprocessor'])
-        self.sample_rate = self.config['preprocessor'].get('sample_rate', 16000)
+        self._input_type = self.config.get('model_type', '')
+        if self._input_type == 'wav2vec2' or self.config.get('input_type') == 'raw_waveform':
+            self._input_type = 'raw_waveform'
+            self.preprocessor = None
+            self.sample_rate = self.config.get('preprocessor', {}).get('sample_rate', 16000)
+        else:
+            self._input_type = 'mel_spectrogram'
+            self.preprocessor = MelSpectrogramPreprocessor(self.config['preprocessor'])
+            self.sample_rate = self.config['preprocessor'].get('sample_rate', 16000)
 
         vocab_path = self.model_dir / 'vocabulary.json'
         self._greedy_decoder = CTCGreedyDecoder(str(vocab_path), str(self.model_dir))
@@ -137,8 +144,9 @@ class ASREngine:
         else:
             categories = {}
 
+        input_type = meta.get('input_type', 'pooled')
         cat_names = sorted(categories.keys())
-        print(f"Tag classifier loaded: {cat_names}")
+        print(f"Tag classifier loaded: {cat_names} (input_type={input_type})")
         for cat in cat_names:
             info = categories[cat]
             print(f"  {cat}: {info.get('num_classes', '?')} classes — {info.get('labels', [])}")
@@ -147,6 +155,7 @@ class ASREngine:
             'session': sess,
             'meta': meta,
             'encoder_dim': meta.get('encoder_dim'),
+            'input_type': input_type,
             'categories': categories,
         }
 
@@ -160,19 +169,25 @@ class ASREngine:
             if encoder_output.shape[1] == enc_dim and encoder_output.shape[2] != enc_dim:
                 encoder_output = np.transpose(encoder_output, (0, 2, 1))
 
-        T = encoder_output.shape[1]
-        if length is not None:
-            valid_len = int(length[0])
-            mask = np.zeros((1, T, 1), dtype=np.float32)
-            mask[0, :valid_len, :] = 1.0
-            pooled = (encoder_output * mask).sum(axis=1) / max(valid_len, 1)
-        else:
-            pooled = encoder_output.mean(axis=1)
-
-        pooled = pooled.astype(np.float32)
         sess = self._tag_classifier['session']
         categories = self._tag_classifier['categories']
-        outputs = sess.run(None, {'pooled_encoder': pooled})
+        input_type = self._tag_classifier.get('input_type', 'pooled')
+
+        T = encoder_output.shape[1]
+
+        if input_type == 'encoder_sequence':
+            enc_out = encoder_output.astype(np.float32)
+            enc_len = np.array([T if length is None else int(length[0])], dtype=np.int64)
+            outputs = sess.run(None, {'encoder_output': enc_out, 'encoded_len': enc_len})
+        else:
+            if length is not None:
+                valid_len = int(length[0])
+                mask = np.zeros((1, T, 1), dtype=np.float32)
+                mask[0, :valid_len, :] = 1.0
+                pooled = (encoder_output * mask).sum(axis=1) / max(valid_len, 1)
+            else:
+                pooled = encoder_output.mean(axis=1)
+            outputs = sess.run(None, {'pooled_encoder': pooled.astype(np.float32)})
 
         result = {}
         for i, cat in enumerate(sorted(categories.keys())):
@@ -374,6 +389,9 @@ class ASREngine:
                 print(f"Logprobs format: [B, C={dim1}, T] (channel-first, will transpose)")
 
     def _prepare_onnx_inputs(self, audio: np.ndarray, sample_rate: Optional[int]) -> Dict[str, np.ndarray]:
+        if self._input_type == 'raw_waveform':
+            waveform = np.expand_dims(audio.astype(np.float32), axis=0)
+            return {self.input_name: waveform}
         mel_spec = self.preprocessor(audio, sample_rate)
         mel_spec = np.expand_dims(mel_spec, axis=0)
         if self.has_length_input:

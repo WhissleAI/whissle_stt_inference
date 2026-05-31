@@ -10,3 +10,4 @@ scipy>=1.9.0
 sentencepiece>=0.1.99
 pyctcdecode>=0.5.0
 kenlm
+huggingface_hub>=0.20.0

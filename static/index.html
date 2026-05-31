@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Whissle ASR</title>
+<title>Whissle STT</title>
 <style>
   :root {
     --bg: #0a0a0a;
@@ -41,11 +41,7 @@
     background: var(--surface);
   }
 
-  header h1 {
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: -0.3px;
-  }
+  header h1 { font-size: 16px; font-weight: 600; letter-spacing: -0.3px; }
 
   header .status {
     font-size: 12px;
@@ -56,19 +52,12 @@
   }
 
   header .status .dot {
-    width: 7px;
-    height: 7px;
-    border-radius: 50%;
+    width: 7px; height: 7px; border-radius: 50%;
     background: var(--text-dim);
   }
-
   header .status .dot.connected { background: var(--green); }
   header .status .dot.recording { background: var(--red); animation: pulse 1.2s infinite; }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.4; }
-  }
+  @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
 
   main {
     flex: 1;
@@ -79,121 +68,80 @@
   }
 
   .transcript-panel {
-    display: flex;
-    flex-direction: column;
+    display: flex; flex-direction: column;
     border-right: 1px solid var(--border);
     overflow: hidden;
   }
 
   .transcript-panel .controls {
-    padding: 16px 24px;
-    display: flex;
-    gap: 10px;
-    align-items: center;
+    padding: 12px 24px;
+    display: flex; gap: 10px; align-items: center;
     border-bottom: 1px solid var(--border);
     background: var(--surface);
+    flex-wrap: wrap;
   }
 
   button {
-    font-family: var(--font);
-    font-size: 13px;
-    font-weight: 500;
-    padding: 8px 18px;
-    border-radius: 8px;
-    border: 1px solid var(--border);
-    cursor: pointer;
-    transition: all 0.15s;
-    background: var(--surface2);
-    color: var(--text);
+    font-family: var(--font); font-size: 13px; font-weight: 500;
+    padding: 8px 18px; border-radius: 8px;
+    border: 1px solid var(--border); cursor: pointer;
+    transition: all 0.15s; background: var(--surface2); color: var(--text);
   }
-
   button:hover { background: #252525; border-color: #3a3a3a; }
   button:disabled { opacity: 0.4; cursor: not-allowed; }
-
-  button.primary {
-    background: var(--accent);
-    border-color: var(--accent);
-    color: #fff;
-  }
-
+  button.primary { background: var(--accent); border-color: var(--accent); color: #fff; }
   button.primary:hover { background: #2563eb; }
   button.danger { background: var(--red); border-color: var(--red); color: #fff; }
   button.danger:hover { background: #dc2626; }
 
+  select, input[type="file"] {
+    font-family: var(--font); font-size: 12px;
+    padding: 6px 10px; border-radius: 6px;
+    border: 1px solid var(--border); background: var(--surface2); color: var(--text);
+    cursor: pointer;
+  }
+  select:focus { outline: 1px solid var(--accent); }
+
   .transcript-body {
-    flex: 1;
-    overflow-y: auto;
-    padding: 20px 24px;
+    flex: 1; overflow-y: auto; padding: 20px 24px;
     scroll-behavior: smooth;
   }
 
   .segment {
-    margin-bottom: 12px;
-    padding: 10px 14px;
-    border-radius: 8px;
-    background: var(--surface);
-    border-left: 3px solid var(--accent-dim);
-    font-size: 14px;
-    line-height: 1.6;
-    transition: border-color 0.2s;
+    margin-bottom: 12px; padding: 10px 14px; border-radius: 8px;
+    background: var(--surface); border-left: 3px solid var(--accent-dim);
+    font-size: 14px; line-height: 1.6; transition: border-color 0.2s;
   }
-
-  .segment.interim {
-    border-left-color: var(--orange);
-    opacity: 0.7;
-    font-style: italic;
-  }
-
+  .segment.interim { border-left-color: var(--orange); opacity: 0.7; font-style: italic; }
   .segment.final { border-left-color: var(--accent); }
+  .segment.upload-result { border-left-color: var(--green); }
 
   .segment .seg-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 4px;
-    font-size: 11px;
-    color: var(--text-dim);
-    font-family: var(--mono);
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 4px; font-size: 11px; color: var(--text-dim); font-family: var(--mono);
   }
-
   .segment .seg-text { word-break: break-word; }
-
-  .segment .seg-tags {
-    display: flex;
-    gap: 6px;
-    margin-top: 6px;
-    flex-wrap: wrap;
-  }
+  .segment .seg-tags { display: flex; gap: 6px; margin-top: 6px; flex-wrap: wrap; }
 
   .tag {
-    font-size: 10px;
-    font-weight: 600;
-    padding: 2px 7px;
-    border-radius: 4px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    font-family: var(--mono);
+    font-size: 10px; font-weight: 600; padding: 2px 7px; border-radius: 4px;
+    text-transform: uppercase; letter-spacing: 0.5px; font-family: var(--mono);
   }
-
   .tag.age { background: #1e293b; color: #93c5fd; }
   .tag.gender { background: #1e1b2e; color: #c4b5fd; }
   .tag.emotion { background: #1a2e1a; color: #86efac; }
   .tag.intent { background: #2e1e1e; color: #fca5a5; }
+  .tag.dialect { background: #2e2a1e; color: #fde68a; }
+  .tag.role { background: #1e2e2e; color: #a5f3fc; }
 
   .sidebar {
-    display: flex;
-    flex-direction: column;
-    background: var(--surface);
-    overflow: hidden;
+    display: flex; flex-direction: column;
+    background: var(--surface); overflow-y: auto;
   }
 
   .sidebar h2 {
-    font-size: 12px;
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 1px;
-    color: var(--text-dim);
-    padding: 16px 20px 10px;
+    font-size: 12px; font-weight: 600; text-transform: uppercase;
+    letter-spacing: 1px; color: var(--text-dim); padding: 16px 20px 10px;
   }
 
   .metadata-section {
@@ -202,83 +150,55 @@
   }
 
   .meta-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 6px 0;
-    font-size: 13px;
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 6px 0; font-size: 13px;
   }
-
   .meta-row .label { color: var(--text-dim); }
+  .meta-row .value { font-weight: 600; font-family: var(--mono); font-size: 12px; }
 
-  .meta-row .value {
-    font-weight: 600;
-    font-family: var(--mono);
-    font-size: 12px;
-  }
+  .visualizer-container { padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  canvas#waveform { width: 100%; height: 64px; border-radius: 6px; background: var(--bg); }
 
-  .visualizer-container {
-    padding: 16px 20px;
-    border-bottom: 1px solid var(--border);
-  }
-
-  canvas#waveform {
-    width: 100%;
-    height: 64px;
-    border-radius: 6px;
-    background: var(--bg);
-  }
-
-  .stats-section {
-    padding: 16px 20px;
-    flex: 1;
-    overflow-y: auto;
-  }
-
-  .stat-card {
-    background: var(--bg);
-    border-radius: 8px;
-    padding: 12px;
-    margin-bottom: 8px;
-  }
-
-  .stat-card .stat-label {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    color: var(--text-dim);
-    margin-bottom: 4px;
-  }
-
-  .stat-card .stat-value {
-    font-size: 22px;
-    font-weight: 700;
-    font-family: var(--mono);
-  }
-
-  .log-panel {
-    padding: 0 20px 16px;
-    max-height: 140px;
-    overflow-y: auto;
-  }
-
+  .log-panel { padding: 0 20px 16px; max-height: 200px; overflow-y: auto; }
   .log-entry {
-    font-size: 11px;
-    color: var(--text-dim);
-    font-family: var(--mono);
-    padding: 2px 0;
-    border-bottom: 1px solid var(--border);
+    font-size: 11px; color: var(--text-dim); font-family: var(--mono);
+    padding: 2px 0; border-bottom: 1px solid var(--border);
   }
-
   .log-entry .log-time { color: #555; margin-right: 6px; }
 
-  .empty-state {
-    text-align: center;
-    padding: 60px 20px;
+  .empty-state { text-align: center; padding: 60px 20px; color: var(--text-dim); }
+  .empty-state p { margin-top: 8px; font-size: 13px; }
+
+  .upload-zone {
+    border: 2px dashed var(--border); border-radius: 8px; padding: 16px;
+    text-align: center; margin: 12px 24px; cursor: pointer;
+    transition: border-color 0.2s; font-size: 13px; color: var(--text-dim);
+  }
+  .upload-zone:hover, .upload-zone.dragover {
+    border-color: var(--accent); color: var(--text);
+  }
+  .upload-zone input { display: none; }
+
+  .upload-progress {
+    margin: 8px 24px; padding: 8px 12px; background: var(--surface);
+    border-radius: 6px; font-size: 12px; font-family: var(--mono);
     color: var(--text-dim);
   }
 
-  .empty-state p { margin-top: 8px; font-size: 13px; }
+  .tab-bar {
+    display: flex; gap: 0; border-bottom: 1px solid var(--border);
+    background: var(--surface);
+  }
+  .tab {
+    padding: 10px 20px; font-size: 12px; font-weight: 600;
+    color: var(--text-dim); cursor: pointer; border-bottom: 2px solid transparent;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  .tab-content { display: none; }
+  .tab-content.active { display: flex; flex-direction: column; flex: 1; overflow: hidden; }
 
   @media (max-width: 768px) {
     main { grid-template-columns: 1fr; }
@@ -289,28 +209,55 @@
 <body>
 
 <header>
-  <h1>Whissle ASR</h1>
+  <h1>Whissle STT</h1>
   <div class="status">
+    <select id="modelSelect" style="margin-right:12px">
+      <option value="">Loading models...</option>
+    </select>
     <div class="dot" id="statusDot"></div>
-    <span id="statusText">Disconnected</span>
+    <span id="statusText">Ready</span>
   </div>
 </header>
 
 <main>
   <div class="transcript-panel">
-    <div class="controls">
-      <button class="primary" id="btnStart" onclick="startRecording()">Start</button>
-      <button class="danger" id="btnStop" onclick="stopRecording()" disabled>Stop</button>
-      <button id="btnClear" onclick="clearTranscript()">Clear</button>
-      <span style="flex:1"></span>
-      <label style="font-size:12px; color:var(--text-dim); display:flex; align-items:center; gap:6px;">
-        <input type="checkbox" id="autoScroll" checked> Auto-scroll
-      </label>
+    <div class="tab-bar">
+      <div class="tab active" onclick="switchTab('stream')">Microphone</div>
+      <div class="tab" onclick="switchTab('upload')">File Upload</div>
     </div>
-    <div class="transcript-body" id="transcriptBody">
-      <div class="empty-state" id="emptyState">
-        <p style="font-size:24px">Microphone</p>
-        <p>Click Start to begin streaming transcription</p>
+
+    <!-- Streaming tab -->
+    <div class="tab-content active" id="tab-stream">
+      <div class="controls">
+        <button class="primary" id="btnStart" onclick="startRecording()">Start</button>
+        <button class="danger" id="btnStop" onclick="stopRecording()" disabled>Stop</button>
+        <button id="btnClear" onclick="clearTranscript()">Clear</button>
+        <span style="flex:1"></span>
+        <label style="font-size:12px; color:var(--text-dim); display:flex; align-items:center; gap:6px;">
+          <input type="checkbox" id="autoScroll" checked> Auto-scroll
+        </label>
+      </div>
+      <div class="transcript-body" id="transcriptBody">
+        <div class="empty-state" id="emptyState">
+          <p style="font-size:24px">Microphone</p>
+          <p>Click Start to begin streaming transcription</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Upload tab -->
+    <div class="tab-content" id="tab-upload">
+      <div class="upload-zone" id="uploadZone" onclick="document.getElementById('fileInput').click()">
+        <input type="file" id="fileInput" accept="audio/*,.wav,.mp3,.ogg,.flac,.m4a,.webm" multiple>
+        <p>Drop audio files here or click to browse</p>
+        <p style="font-size:11px; margin-top:4px">WAV, MP3, OGG, FLAC, M4A — max 50MB each</p>
+      </div>
+      <div id="uploadProgress"></div>
+      <div class="transcript-body" id="uploadResults">
+        <div class="empty-state">
+          <p style="font-size:24px">File Upload</p>
+          <p>Upload audio files for batch transcription with metadata</p>
+        </div>
       </div>
     </div>
   </div>
@@ -344,22 +291,10 @@
 
 <script>
 const SAMPLE_RATE = 16000;
-const CHUNK_MS = 100;
-const CHUNK_SAMPLES = SAMPLE_RATE * CHUNK_MS / 1000;
-
-let ws = null;
-let audioCtx = null;
-let mediaStream = null;
-let scriptNode = null;
-let sourceNode = null;
-let isRecording = false;
-let sessionStart = null;
-let segmentCount = 0;
-let latencies = [];
-let durationTimer = null;
-let interimEl = null;
-
-const wsUrl = `ws://${location.host}/asr/stream`;
+let ws = null, audioCtx = null, mediaStream = null, scriptNode = null, sourceNode = null;
+let isRecording = false, sessionStart = null, segmentCount = 0, latencies = [];
+let durationTimer = null, interimEl = null;
+let loadedModels = {};
 
 function log(msg) {
   const panel = document.getElementById('logPanel');
@@ -372,52 +307,57 @@ function log(msg) {
 }
 
 function setStatus(state, text) {
-  const dot = document.getElementById('statusDot');
-  const txt = document.getElementById('statusText');
-  dot.className = 'dot ' + state;
-  txt.textContent = text;
+  document.getElementById('statusDot').className = 'dot ' + state;
+  document.getElementById('statusText').textContent = text;
+}
+
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelector(`.tab-bar .tab:nth-child(${tab === 'stream' ? 1 : 2})`).classList.add('active');
+  document.getElementById(`tab-${tab}`).classList.add('active');
+}
+
+function getSelectedModel() {
+  return document.getElementById('modelSelect').value;
 }
 
 function updateDuration() {
   if (!sessionStart) return;
   const sec = Math.floor((Date.now() - sessionStart) / 1000);
-  const m = Math.floor(sec / 60);
-  const s = sec % 60;
-  document.getElementById('statDuration').textContent = `${m}:${s.toString().padStart(2,'0')}`;
+  document.getElementById('statDuration').textContent =
+    `${Math.floor(sec/60)}:${(sec%60).toString().padStart(2,'0')}`;
 }
 
+// ── Streaming ──────────────────────────────────────────────────────
 async function startRecording() {
   try {
     mediaStream = await navigator.mediaDevices.getUserMedia({
       audio: { sampleRate: SAMPLE_RATE, channelCount: 1, echoCancellation: true, noiseSuppression: true }
     });
-  } catch (e) {
-    log('Microphone access denied');
-    return;
-  }
+  } catch (e) { log('Microphone access denied'); return; }
 
   audioCtx = new AudioContext({ sampleRate: SAMPLE_RATE });
   sourceNode = audioCtx.createMediaStreamSource(mediaStream);
 
-  // Waveform visualizer
   const analyser = audioCtx.createAnalyser();
   analyser.fftSize = 256;
   sourceNode.connect(analyser);
   drawWaveform(analyser);
 
-  // PCM capture
   scriptNode = audioCtx.createScriptProcessor(4096, 1, 1);
   sourceNode.connect(scriptNode);
   scriptNode.connect(audioCtx.destination);
 
-  // WebSocket
+  const model = getSelectedModel();
+  const wsUrl = `ws://${location.host}/asr/stream`;
   ws = new WebSocket(wsUrl);
   ws.binaryType = 'arraybuffer';
 
   ws.onopen = () => {
     setStatus('connected', 'Connected');
-    log('WebSocket connected');
-    ws.send(JSON.stringify({ type: 'config', language: 'en', use_lm: true }));
+    log(`WebSocket connected (model: ${model || 'default'})`);
+    ws.send(JSON.stringify({ type: 'config', language: 'en', use_lm: true, model: model }));
 
     scriptNode.onaudioprocess = (e) => {
       if (!isRecording || ws.readyState !== WebSocket.OPEN) return;
@@ -431,19 +371,9 @@ async function startRecording() {
     };
   };
 
-  ws.onmessage = (e) => {
-    const msg = JSON.parse(e.data);
-    handleMessage(msg);
-  };
-
-  ws.onclose = () => {
-    setStatus('', 'Disconnected');
-    log('WebSocket closed');
-  };
-
-  ws.onerror = (e) => {
-    log('WebSocket error');
-  };
+  ws.onmessage = (e) => handleMessage(JSON.parse(e.data));
+  ws.onclose = () => { setStatus('', 'Disconnected'); log('WebSocket closed'); };
+  ws.onerror = () => log('WebSocket error');
 
   isRecording = true;
   sessionStart = Date.now();
@@ -460,11 +390,7 @@ async function startRecording() {
 
 function stopRecording() {
   isRecording = false;
-
-  if (ws && ws.readyState === WebSocket.OPEN) {
-    ws.send(JSON.stringify({ type: 'end' }));
-  }
-
+  if (ws && ws.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'end' }));
   if (scriptNode) { scriptNode.disconnect(); scriptNode = null; }
   if (sourceNode) { sourceNode.disconnect(); sourceNode = null; }
   if (audioCtx) { audioCtx.close(); audioCtx = null; }
@@ -480,10 +406,10 @@ function stopRecording() {
 function clearTranscript() {
   document.getElementById('transcriptBody').innerHTML =
     '<div class="empty-state" id="emptyState"><p style="font-size:24px">Microphone</p><p>Click Start to begin streaming transcription</p></div>';
-  interimEl = null;
-  segmentCount = 0;
+  interimEl = null; segmentCount = 0;
   document.getElementById('statSegments').textContent = '0';
-  ['tagAge','tagGender','tagEmotion','tagIntent'].forEach(id => document.getElementById(id).textContent = '--');
+  ['tagAge','tagGender','tagEmotion','tagIntent'].forEach(id =>
+    document.getElementById(id).textContent = '--');
 }
 
 function handleMessage(msg) {
@@ -492,7 +418,6 @@ function handleMessage(msg) {
 
     if (msg.is_final) {
       if (interimEl) { interimEl.remove(); interimEl = null; }
-
       segmentCount++;
       document.getElementById('statSegments').textContent = segmentCount;
 
@@ -504,44 +429,10 @@ function handleMessage(msg) {
 
       const el = document.createElement('div');
       el.className = 'segment final';
-
-      let tagsHtml = '';
-      const tags = msg.tags || msg.metadata || {};
-      if (Object.keys(tags).length) {
-        for (const [k, v] of Object.entries(tags)) {
-          if (v) {
-            const cls = k.toLowerCase();
-            tagsHtml += `<span class="tag ${cls}">${k}: ${v}</span>`;
-          }
-        }
-      }
-
-      const offset = msg.audioOffset ? msg.audioOffset.toFixed(1) + 's' : '';
-      const latency = msg.process_ms ? msg.process_ms + 'ms' : '';
-
-      el.innerHTML = `
-        <div class="seg-header">
-          <span>${offset}</span>
-          <span>${latency}</span>
-        </div>
-        <div class="seg-text">${escapeHtml(msg.text)}</div>
-        ${tagsHtml ? `<div class="seg-tags">${tagsHtml}</div>` : ''}
-      `;
+      el.innerHTML = buildSegmentHtml(msg);
       body.appendChild(el);
-
-      // Update sidebar tags
-      if (tags.age) document.getElementById('tagAge').textContent = tags.age;
-      if (tags.gender) document.getElementById('tagGender').textContent = tags.gender;
-      if (tags.emotion) document.getElementById('tagEmotion').textContent = tags.emotion;
-      if (tags.intent) document.getElementById('tagIntent').textContent = tags.intent;
-      if (msg.metadata) {
-        if (msg.metadata.age) document.getElementById('tagAge').textContent = msg.metadata.age;
-        if (msg.metadata.gender) document.getElementById('tagGender').textContent = msg.metadata.gender;
-        if (msg.metadata.emotion) document.getElementById('tagEmotion').textContent = msg.metadata.emotion;
-        if (msg.metadata.intent) document.getElementById('tagIntent').textContent = msg.metadata.intent;
-      }
+      updateSidebarTags(msg.tags || msg.metadata || {});
     } else {
-      // Interim
       if (!interimEl) {
         interimEl = document.createElement('div');
         interimEl.className = 'segment interim';
@@ -550,14 +441,122 @@ function handleMessage(msg) {
       interimEl.innerHTML = `<div class="seg-text">${escapeHtml(msg.text)}</div>`;
     }
 
-    if (document.getElementById('autoScroll').checked) {
-      body.scrollTop = body.scrollHeight;
-    }
-  } else if (msg.type === 'end') {
-    log('Server sent end');
-  } else if (msg.type === 'error') {
-    log('Error: ' + msg.message);
+    if (document.getElementById('autoScroll').checked) body.scrollTop = body.scrollHeight;
   }
+}
+
+// ── File Upload ────────────────────────────────────────────────────
+const uploadZone = document.getElementById('uploadZone');
+const fileInput = document.getElementById('fileInput');
+
+uploadZone.addEventListener('dragover', (e) => { e.preventDefault(); uploadZone.classList.add('dragover'); });
+uploadZone.addEventListener('dragleave', () => uploadZone.classList.remove('dragover'));
+uploadZone.addEventListener('drop', (e) => {
+  e.preventDefault(); uploadZone.classList.remove('dragover');
+  handleFiles(e.dataTransfer.files);
+});
+fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+async function handleFiles(fileList) {
+  const model = getSelectedModel();
+  const results = document.getElementById('uploadResults');
+  const progress = document.getElementById('uploadProgress');
+
+  for (const file of fileList) {
+    progress.innerHTML = `<div class="upload-progress">Transcribing: ${file.name} (${(file.size/1024/1024).toFixed(1)} MB)...</div>`;
+    log(`Uploading ${file.name} (model: ${model || 'default'})`);
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('model', model);
+    formData.append('use_lm', 'true');
+    formData.append('metadata_prob', 'false');
+
+    try {
+      const start = performance.now();
+      const resp = await fetch('/asr/transcribe', { method: 'POST', body: formData });
+      const elapsed = ((performance.now() - start) / 1000).toFixed(2);
+
+      if (!resp.ok) {
+        const err = await resp.json();
+        throw new Error(err.detail || resp.statusText);
+      }
+
+      const result = await resp.json();
+      log(`${file.name}: "${(result.text || '').substring(0, 60)}..." (${elapsed}s)`);
+
+      // Clear empty state
+      if (results.querySelector('.empty-state')) results.innerHTML = '';
+
+      const el = document.createElement('div');
+      el.className = 'segment upload-result';
+
+      const tags = result.tags || result.metadata || {};
+      const entities = result.entities || [];
+      let tagsHtml = buildTagsHtml(tags);
+      if (entities.length) {
+        tagsHtml += entities.map(e =>
+          `<span class="tag intent">${e.type}: ${e.text}</span>`
+        ).join('');
+      }
+
+      el.innerHTML = `
+        <div class="seg-header">
+          <span>${escapeHtml(file.name)}</span>
+          <span>${result.inference_time || elapsed + 's'} · ${result.model || model || 'default'}</span>
+        </div>
+        <div class="seg-text">${escapeHtml(result.text || '(no transcript)')}</div>
+        ${tagsHtml ? `<div class="seg-tags">${tagsHtml}</div>` : ''}
+        <details style="margin-top:8px; font-size:11px; color:var(--text-dim)">
+          <summary style="cursor:pointer">Raw JSON</summary>
+          <pre style="margin-top:4px; padding:8px; background:var(--bg); border-radius:4px; overflow-x:auto; font-size:10px">${escapeHtml(JSON.stringify(result, null, 2))}</pre>
+        </details>
+      `;
+      results.appendChild(el);
+      updateSidebarTags(tags);
+
+    } catch (err) {
+      log(`Error: ${file.name} — ${err.message}`);
+      const el = document.createElement('div');
+      el.className = 'segment';
+      el.style.borderLeftColor = 'var(--red)';
+      el.innerHTML = `
+        <div class="seg-header"><span>${escapeHtml(file.name)}</span><span>Error</span></div>
+        <div class="seg-text" style="color:var(--red)">${escapeHtml(err.message)}</div>
+      `;
+      results.appendChild(el);
+    }
+  }
+  progress.innerHTML = '';
+  fileInput.value = '';
+}
+
+// ── Shared helpers ─────────────────────────────────────────────────
+function buildTagsHtml(tags) {
+  let html = '';
+  for (const [k, v] of Object.entries(tags)) {
+    if (v) html += `<span class="tag ${k.toLowerCase()}">${k}: ${v}</span>`;
+  }
+  return html;
+}
+
+function buildSegmentHtml(msg) {
+  const tags = msg.tags || msg.metadata || {};
+  const tagsHtml = buildTagsHtml(tags);
+  const offset = msg.audioOffset ? msg.audioOffset.toFixed(1) + 's' : '';
+  const latency = msg.process_ms ? msg.process_ms + 'ms' : '';
+  return `
+    <div class="seg-header"><span>${offset}</span><span>${latency}</span></div>
+    <div class="seg-text">${escapeHtml(msg.text)}</div>
+    ${tagsHtml ? `<div class="seg-tags">${tagsHtml}</div>` : ''}
+  `;
+}
+
+function updateSidebarTags(tags) {
+  if (tags.age) document.getElementById('tagAge').textContent = tags.age;
+  if (tags.gender) document.getElementById('tagGender').textContent = tags.gender;
+  if (tags.emotion) document.getElementById('tagEmotion').textContent = tags.emotion;
+  if (tags.intent) document.getElementById('tagIntent').textContent = tags.intent;
 }
 
 function escapeHtml(t) {
@@ -566,7 +565,7 @@ function escapeHtml(t) {
   return d.innerHTML;
 }
 
-// Waveform
+// ── Waveform ───────────────────────────────────────────────────────
 let animFrame = null;
 function drawWaveform(analyser) {
   const canvas = document.getElementById('waveform');
@@ -577,20 +576,17 @@ function drawWaveform(analyser) {
 
   const bufLen = analyser.frequencyBinCount;
   const data = new Uint8Array(bufLen);
-  const w = canvas.offsetWidth;
-  const h = canvas.offsetHeight;
+  const w = canvas.offsetWidth, h = canvas.offsetHeight;
 
   function draw() {
     animFrame = requestAnimationFrame(draw);
     if (!isRecording) { cancelAnimationFrame(animFrame); return; }
-
     analyser.getByteTimeDomainData(data);
     ctx.fillStyle = '#0a0a0a';
     ctx.fillRect(0, 0, w, h);
     ctx.lineWidth = 1.5;
     ctx.strokeStyle = '#3b82f6';
     ctx.beginPath();
-
     const sliceW = w / bufLen;
     let x = 0;
     for (let i = 0; i < bufLen; i++) {
@@ -605,19 +601,30 @@ function drawWaveform(analyser) {
   draw();
 }
 
-// Fetch model info on load
+// ── Init ───────────────────────────────────────────────────────────
+fetch('/models').then(r => r.json()).then(d => {
+  loadedModels = d.models || {};
+  const sel = document.getElementById('modelSelect');
+  sel.innerHTML = '';
+  const modelIds = Object.keys(loadedModels);
+  modelIds.forEach(mid => {
+    const info = loadedModels[mid];
+    const opt = document.createElement('option');
+    opt.value = mid;
+    const tagLabel = info.has_tag_classifier ? ' (dual-head)' : '';
+    opt.textContent = `${mid}${tagLabel}`;
+    sel.appendChild(opt);
+  });
+  document.getElementById('statModel').textContent = modelIds.join(', ');
+  log(`Models: ${modelIds.join(', ')}`);
+}).catch(() => {
+  document.getElementById('modelSelect').innerHTML = '<option value="">default</option>';
+  log('Could not fetch models list');
+});
+
 fetch('/health').then(r => r.json()).then(d => {
   log(`Server: ${d.models_loaded} model(s), startup ${d.startup_time || '?'}`);
-  document.getElementById('statModel').textContent = d.models_loaded > 0 ? 'en-meta' : 'none';
 }).catch(() => log('Server not reachable'));
-
-fetch('/models').then(r => r.json()).then(d => {
-  const models = Object.keys(d.models || {});
-  if (models.length) {
-    document.getElementById('statModel').textContent = models.join(', ');
-    log(`Models: ${models.join(', ')}`);
-  }
-}).catch(() => {});
 </script>
 
 </body>
