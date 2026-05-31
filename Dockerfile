@@ -15,11 +15,17 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 COPY src/ src/
+COPY static/ static/
+COPY scripts/ scripts/
+COPY entrypoint.sh .
 
-ENV ASR_MODEL_DIR=/app/models
-ENV PORT=8001
-ENV HOST=0.0.0.0
+ENV ASR_MODEL_DIR=/app/models \
+    ASR_MODEL=en-meta \
+    ASR_DEVICE=cpu \
+    PORT=8001 \
+    HOST=0.0.0.0 \
+    HF_TOKEN=""
 
 EXPOSE 8001
 
-CMD ["python", "-m", "uvicorn", "src.server:app", "--host", "0.0.0.0", "--port", "8001"]
+ENTRYPOINT ["/app/entrypoint.sh"]

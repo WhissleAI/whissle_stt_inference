@@ -325,41 +325,48 @@ class ASREngine:
 
     def _load_onnx_model(self, device: str) -> None:
         import onnxruntime as ort
+        import multiprocessing
 
-        onnx_path = self.model_dir / 'model.onnx'
+        onnx_int8 = self.model_dir / 'model_int8.onnx'
+        onnx_path = onnx_int8 if onnx_int8.exists() else self.model_dir / 'model.onnx'
+        if onnx_int8.exists():
+            print(f"Using quantized model: {onnx_int8.name}")
         available_providers = ort.get_available_providers()
         print(f"ONNX Runtime version: {ort.__version__}")
         print(f"Available providers: {available_providers}")
 
         sess_options = ort.SessionOptions()
         sess_options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_ENABLE_ALL
-        sess_options.intra_op_num_threads = 1
-        sess_options.inter_op_num_threads = 1
-        sess_options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
 
-        use_cuda = device in ('auto', 'cuda') and 'CUDAExecutionProvider' in available_providers
-        if use_cuda:
-            try:
-                self.session = ort.InferenceSession(
-                    str(onnx_path),
-                    sess_options=sess_options,
-                    providers=['CUDAExecutionProvider', 'CPUExecutionProvider'],
-                )
-            except Exception as e:
-                print(f"CUDA failed: {e}, falling back to CPU")
-                self.session = ort.InferenceSession(
-                    str(onnx_path),
-                    sess_options=sess_options,
-                    providers=['CPUExecutionProvider'],
-                )
-        else:
+        cpu_count = multiprocessing.cpu_count() or 4
+        sess_options.intra_op_num_threads = max(1, cpu_count // 2)
+        sess_options.inter_op_num_threads = max(1, cpu_count // 4)
+        sess_options.execution_mode = ort.ExecutionMode.ORT_PARALLEL
+
+        providers = []
+        if device in ('auto', 'cuda') and 'CUDAExecutionProvider' in available_providers:
+            providers.append('CUDAExecutionProvider')
+        if device in ('auto', 'coreml') and 'CoreMLExecutionProvider' in available_providers:
+            providers.append('CoreMLExecutionProvider')
+        providers.append('CPUExecutionProvider')
+
+        try:
+            self.session = ort.InferenceSession(
+                str(onnx_path),
+                sess_options=sess_options,
+                providers=providers,
+            )
+        except Exception as e:
+            print(f"Provider {providers[0]} failed: {e}, falling back to CPU")
             self.session = ort.InferenceSession(
                 str(onnx_path),
                 sess_options=sess_options,
                 providers=['CPUExecutionProvider'],
             )
 
-        print(f"ONNX active providers: {self.session.get_providers()}")
+        active = self.session.get_providers()
+        print(f"ONNX active providers: {active}")
+        print(f"Threads: intra={sess_options.intra_op_num_threads}, inter={sess_options.inter_op_num_threads}")
 
         self.input_name = self.session.get_inputs()[0].name
         self.output_name = self.session.get_outputs()[0].name

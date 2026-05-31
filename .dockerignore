@@ -1,0 +1,9 @@
+models/
+models_backup/
+.venv/
+__pycache__/
+*.pyc
+.git/
+.gitignore
+*.md
+LICENSE

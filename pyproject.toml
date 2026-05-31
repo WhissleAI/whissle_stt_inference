@@ -1,0 +1,51 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "whissle-stt"
+version = "0.1.0"
+description = "ONNX-based speech-to-text with metadata extraction (age, gender, emotion, intent)"
+readme = "README.md"
+license = {text = "Whissle Inference-Only License"}
+requires-python = ">=3.10"
+authors = [{name = "Whissle AI", email = "team@whissle.ai"}]
+keywords = ["asr", "speech-recognition", "stt", "onnx", "emotion", "age", "gender"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Topic :: Multimedia :: Sound/Audio :: Speech",
+    "Programming Language :: Python :: 3",
+    "Operating System :: OS Independent",
+]
+dependencies = [
+    "onnxruntime>=1.16.0",
+    "librosa>=0.10.0",
+    "soundfile>=0.12.0",
+    "numpy>=1.21.0",
+    "scipy>=1.9.0",
+    "sentencepiece>=0.1.99",
+    "pyctcdecode>=0.5.0",
+    "huggingface_hub>=0.20.0",
+]
+
+[project.optional-dependencies]
+server = [
+    "fastapi>=0.100.0",
+    "uvicorn>=0.23.0",
+    "python-multipart>=0.0.6",
+    "websockets>=12.0",
+]
+quantize = [
+    "onnxruntime>=1.16.0",
+]
+all = ["whissle-stt[server,quantize]"]
+
+[project.scripts]
+whissle-stt = "src.cli:main"
+
+[project.urls]
+Homepage = "https://github.com/WhissleAI/whissle_stt_inference"
+Models = "https://huggingface.co/WhissleAI"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src"]
